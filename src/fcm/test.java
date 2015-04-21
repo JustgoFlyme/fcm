@@ -46,13 +46,12 @@ public class test {
 				 list.add(k);
 			 }
 		 }
-		 //System.out.print(teigMatrix.get(0, 0));
 		 int [] selectEig=new int[list.size()];
 		 for(int m=0;m<selectEig.length;m++){
 			 selectEig[m]=list.get(m);
 		 }
 		 Matrix eig=ieig.getMatrix(0,inputrows-1,selectEig);
-		 FCM(eig,3,2,100,0.1);
+		 FCM(eig,2,2,100,0.00001);
 	}
 	//data 矩阵m*n,有m个具有n维特征的样本；cluster_n：聚类个数；Uindex:目标函数中隶属度矩阵的指数;
 	//maxIterate_n:最大迭代次数；udegreechange:隶属度变化最小，迭代终止条件；
@@ -67,56 +66,54 @@ public class test {
 		double sum=0;//更新隶属度矩阵计算分母的和
 		double objfcn1=0;
 		double objfcn2=0;
+		double temp=0;
+		double sum1=0;
+		double sum2=0;
+		double [][]centroid=new double[cluster_n][data_cols_n];
 		//初始化聚类中心
-		int []coc=new int[cluster_n];
-		HashSet hs=new HashSet();
-		while(true){
-			hs.add((int) (Math.random()*data_rows_n));
-			if(hs.size()==cluster_n){
-				break;
-			}
-			else{
-				continue;
+		for(int i=0;i<cluster_n;i++){
+			for(int j=0;j<data_cols_n;j++){
+				temp=0;sum1=0;sum2=0;
+				for(int k=0;k<data_rows_n;k++){
+					temp=Math.pow(U.get(k, i), Uindex);
+					sum1+=temp*data.get(k, j);
+					sum2+=temp;
+				}
+				centroid[i][j]=sum1/sum2;
 			}
 		}
-		Iterator it=hs.iterator();
-		for(int i=0;i<cluster_n&&it.hasNext();i++){
-			coc[i]=(int) it.next();
-		}
-		hs.clear();
-		int iteratornum=0;
 		while(true)
 		{//前后目标函数的差值是否达到阀值
-			objfcn1=objectFunction(data, U, Uindex, coc);
-			//2.更新聚类中心
-			for(int k=0;k<cluster_n;k++){
-				double tempsum1=0;
-				double tempsum2=0;
-				for(int j=0;j<data_rows_n;j++){
-					tempsum1+=Math.pow(U.get(j, k),Uindex)*j;
-					tempsum2+=Math.pow(U.get(j, k),Uindex);
-				}
-				coc[k]=(int) Math.round(tempsum1/tempsum2);
-			}
-			//3.更新隶属度矩阵
+			objfcn1=objectFunction(data, U, Uindex, centroid);
+			//2.更新隶属度矩阵
 			for(int x=0;x<data_rows_n;x++){
 				for(int y=0;y<cluster_n;y++){
-					for(int z=0;z<cluster_n;z++){
-						sum+=Math.pow(disfcn(tempdata[x],tempdata[coc[y]])/disfcn(tempdata[x],tempdata[coc[z]]),2/(Uindex-1));
-					}
-					if(Double.isNaN(sum)){
+					if(disfcn(tempdata[x],centroid[y])==0){
 						U.set(x, y, 1);
 					}
 					else{
-							U.set(x, y, 1/sum);
+						sum=0;
+						for(int z=0;z<cluster_n;z++){
+							sum+=Math.pow(disfcn(tempdata[x],centroid[y])/disfcn(tempdata[x],centroid[z]),2/(Uindex-1));
 						}
-					sum=0;
+						U.set(x, y, 1/sum);
+					}
 				}
 			}
-			
+			//3.更新聚类中心
+			for(int i=0;i<cluster_n;i++){
+				for(int j=0;j<data_cols_n;j++){
+					temp=0;sum1=0;sum2=0;
+					for(int k=0;k<data_rows_n;k++){
+						temp=Math.pow(U.get(k,i), Uindex);
+						sum1+=temp*data.get(k, j);
+						sum2+=temp;
+					}
+					centroid[i][j]=sum1/sum2;
+				}
+			}
 			//4.计算目标函数差值
-			objfcn2=objectFunction(data, U, Uindex, coc);iteratornum++;
-			//System.out.println(Math.abs(objfcn1-objfcn2));
+			objfcn2=objectFunction(data, U, Uindex, centroid);
 			if(Math.abs(objfcn1-objfcn2)<udegreechange){
 				break;
 			}
@@ -126,15 +123,15 @@ public class test {
 		}
 		//输出打印测试
 		U.print(1, 10);
-		outputArray(coc);
-		System.out.println(iteratornum);
+		Matrix outputCentroid=new Matrix(centroid);
+		outputCentroid.print(1, 5);
 	}
 	//初始化隶属度矩阵
 	public static void initialMOC(double [][]a){
      	 int sample_n=a.length;
      	 int cluster_n=a[0].length;
      	 double sum=0;
-     	 for(int i=0;i<sample_n;i++){
+     	 /*for(int i=0;i<sample_n;i++){
      		 a[i][0]=Math.random();
      		 for(int j=0;j<cluster_n-1;j++){
      			 sum+=a[i][j];
@@ -142,17 +139,31 @@ public class test {
      		 }
      		 a[i][cluster_n-1]=1-sum;
      		 sum=0;
+     	 }*/
+     	 for(int i=0;i<sample_n;i++){
+     		 for(int j=0;j<cluster_n;j++){
+     			 a[i][j]=Math.random();
+     		 }
+     	 }
+     	 for(int i=0;i<sample_n;i++){
+     		 for(int j=0;j<cluster_n;j++){
+     			 sum+=a[i][j];
+     		 }
+     		 for(int k=0;k<cluster_n;k++){
+     			 a[i][k]/=sum;
+     		 }
+     		 sum=0;
      	 }
       }
 	//计算目标函数
-	public static double objectFunction(Matrix data,Matrix MOC,double Uindex,int []coc){
+	public static double objectFunction(Matrix data,Matrix MOC,double Uindex,double [][]centroid){
 		double objfcn=0;
 		int data_rows=data.getRowDimension();
 		int MOC_cols=MOC.getColumnDimension();
 		double [][]sampledata=data.getArray();
 		for(int j=0;j<data_rows;j++){
 			for(int k=0;k<MOC_cols;k++){
-				objfcn=Math.pow(MOC.get(j, k),Uindex)*Math.pow(disfcn(sampledata[j], sampledata[coc[k]]), 2);
+				objfcn=Math.pow(MOC.get(j, k),Uindex)*Math.pow(disfcn(sampledata[j], centroid[k]), 2);
 			}
 		}
 		return objfcn;
