@@ -16,7 +16,7 @@ public class test {
 	public static void main(String [] args){
 		//读入邻接矩阵
 		try{
-			FileReader in=new FileReader("./src/fcm/test.txt");
+			FileReader in=new FileReader("./src/fcm/frate.txt");
 			BufferedReader bReader=new BufferedReader(in);
 			inputdata=Matrix.read(bReader);
 			}catch(Exception ex){
@@ -59,7 +59,7 @@ public class test {
 		 System.arraycopy(selectEig, 0, direct, 0, 3);
 		 outputArray(direct);
 		 Matrix eig=ieig.getMatrix(0,inputrows-1,direct);
-		 FCM(eig,3,2,100,0.000001);
+		 FCM(eig,2,2,100,0.000001);
 	}
 	//data 矩阵m*n,有m个具有n维特征的样本；cluster_n：聚类个数；Uindex:目标函数中隶属度矩阵的指数;
 	//maxIterate_n:最大迭代次数；udegreechange:隶属度变化最小，迭代终止条件；
