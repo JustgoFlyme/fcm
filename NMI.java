@@ -148,9 +148,9 @@ public class OverlapNMI {
 			Hx_y +=Hxi_y;
 		}
 		//H(Y|X)
-		for (i = 0; i < partitionFound.size(); i++) {
+		for (j = 0; j < partitionFound.size(); j++) {
 			double Hxi_y = Double.MAX_VALUE;
-			for (j = 0; j < partitionTruth.size(); j++) {
+			for (i = 0; i < partitionTruth.size(); i++) {
 				Hxi_yj = 0.0;
 				Ha = h(N-(X[i]+Y[j]-XY[i][j]),N);
 				Hb = h(Y[j]-XY[i][j],N);
